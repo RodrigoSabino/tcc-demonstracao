@@ -1,0 +1,90 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@model TccWebApp.Models.FormModel
+
+<script src="~/Scripts/jquery-3.2.1.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#send_button").click(function () {
+            $("#loader").css({ "display": "block" })
+            $("#info").css({ "display": "none" })
+        });
+    });
+</script>
+<style>
+    .center {
+        margin: auto;
+        padding: 60px 0;
+        margin-bottom: 15%;
+    }
+
+    .no-border {
+        border: 0; 
+        box-shadow: none;
+    }
+    
+    .center-loader {
+        margin: auto;
+        margin-top: 5%;
+        margin-bottom: 15%;
+        width: 60%;
+        padding: 0px 0px;
+    }
+
+    .loader {
+        border: 12px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 12px solid #337ab7;
+        border-bottom: 12px solid #337ab7;
+        width: 115px;
+        height: 115px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+
+    @@webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
+@using (Html.BeginForm("Index", "Home", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-horizontal center", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="center" style="text-align: center; width:100%">
+        <div class="loader center-loader" id="loader" style="display: none"></div>
+        <div id="info" style="display: block">
+            <h2 style="margin-bottom: 2%;">Escolha uma rádio ou um arquivo:</h2>
+            <div class="form-inline">
+                @Html.DropDownListFor(model => model.radioId, new SelectList(TccWebApp.Models.RadioListModel.RadioList, "id", "name"), string.Empty, new { @class = "form-control" })
+                &nbsp; &nbsp;  ou  &nbsp; &nbsp;
+                @Html.TextBoxFor(model => model.recordedTrack, new { type = "file", @class = "form-control no-border input-md" })
+            </div>
+            <h2 style="margin-bottom: 2%; margin-top: 2%;">Escolha um algoritmo:</h2>
+            <div class="form-inline">
+                @Html.DropDownListFor(model => model.algorithmId, new SelectList(TccWebApp.Models.AlgorithmListModel.AlgorithmList, "id", "name"), new { @class = "form-control", style = "width: auto;" })
+                <input type="submit" id="send_button" value="Enviar" class="btn btn-primary form-control" style="margin-left: 25px" />
+            </div>
+        </div>
+    </div>
+}
+    
+

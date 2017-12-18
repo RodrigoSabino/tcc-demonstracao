@@ -1,0 +1,175 @@
+﻿@{
+    ViewBag.Title = "About";
+}
+
+<script src="~/Scripts/jquery-3.2.1.js"></script>
+<script src="~/Scripts/Chart.js"></script>
+<script>
+    $(document).ready(function(){
+        $.getJSON('@Url.Action("GetResult", "Home")', function (response) {
+            console.log("success");
+            console.log(JSON.stringify(response));
+
+            var keys_count = Object.keys(response).length;
+            var energy_only = false;
+            var algorithm;
+
+            if (response.source == 1) {
+                $("#audio-player").attr("src", "C:/Users/output/audio.wav");
+            }
+
+            $.each(response, function (key, val) {
+                var key_last_char = key[key.length - 1];
+
+                if (key != "audio_file" && key != "source") {
+                    algorithm = key;
+
+                    if (key_last_char == "e") {
+                        energy_only = true;
+                    }
+
+                    return false;
+                }
+            })
+            
+            if (energy_only) {
+                $("#voter_title").append(" - Energia");
+                $("#knn").append(showInPercentage(response.knne.likely_to_be_music));
+                $("#mlp").append(showInPercentage(response.nne.likely_to_be_music));
+                $("#svm").append(showInPercentage(response.svme.likely_to_be_music));
+                $("#voter").append(showInPercentage(response.voter.likely_to_be_music));
+                showData("Votador - Energia", "voterChart", response.voter.sec_by_sec_music_prediction, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', true);
+                showData("KNN - Energia", "knnChart", response.knne.sec_by_sec_music_prediction, 'rgba(255, 99, 132, 0.2)', 'rgba(255,99,132,1)', false);
+                showData("MLP - Energia", "mlpChart", response.nne.sec_by_sec_music_prediction, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', false);
+                showData("SVM - Energia", "svmChart", response.svme.sec_by_sec_music_prediction, 'rgba(255, 206, 86, 0.2)', 'rgba(255, 206, 86, 1)', false);
+            } else {
+                $("#knn").append(showInPercentage(response.knn.likely_to_be_music));
+                $("#mlp").append(showInPercentage(response.nn.likely_to_be_music));
+                $("#svm").append(showInPercentage(response.svm.likely_to_be_music));
+                $("#voter").append(showInPercentage(response.voter.likely_to_be_music));
+                showData("Votador", "voterChart", response.voter.sec_by_sec_music_prediction, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', true);
+                showData("KNN", "knnChart", response.knn.sec_by_sec_music_prediction, 'rgba(255, 99, 132, 0.2)', 'rgba(255,99,132,1)', false);
+                showData("MLP", "mlpChart", response.nn.sec_by_sec_music_prediction, 'rgba(54, 162, 235, 0.2)', 'rgba(54, 162, 235, 1)', false);
+                showData("SVM", "svmChart", response.svm.sec_by_sec_music_prediction, 'rgba(255, 206, 86, 0.2)', 'rgba(255, 206, 86, 1)', false);
+            }
+            
+        })
+        .fail(function () { console.log('failure'); });
+
+        audiojs.events.ready(function() {
+            var as = audiojs.createAll();
+            $('.play-pause').css('width', '38px');
+            $('.audiojs ').css('width', '100%');
+            $('.scrubber').css('width', '70%');
+            $('.progress').css('width', '70%');
+            $('.progress').css('width', '0%');
+        });
+    });
+
+    function showInPercentage(number) {
+        number = number > 1 ? number/100 : number;
+        return ((number * 100).toFixed(1) + "%");
+    }
+
+    function showData(title, elementId, data, chartBackgroundColor, chartBorderColor, voter) {
+        data.push(data[data.length - 1]);
+
+        var ctx = document.getElementById(elementId).getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+                datasets: [{
+                    label: 'Classificação',
+                    data: data,
+                    backgroundColor: chartBackgroundColor,
+                    borderColor: chartBorderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: true,
+                    text: title
+                },
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: voter ? false : true,
+                            labelString: 'Tempo (s)'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Classificação'
+                        },
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    }
+</script>
+
+<style>
+    .gradient-black {
+        background: #000;
+        background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #222), color-stop(0.5, #333), color-stop(0.51, #222), color-stop(1, #222));
+        background-image: -moz-linear-gradient(center top, #222 0%, #333 50%, #222 51%, #222 100%);
+    }
+
+    .center {
+        margin: auto;
+        margin-top: 18%;
+        margin-bottom: 25%;
+        width: 60%;
+        padding: 0px 0px;
+    }
+
+    .center-title {
+        margin: auto;
+        width: 60%;
+        padding: 0px 0px;
+    }
+</style>
+<div class="container" style="margin-bottom:30%;margin-top:3%">
+    <div class="row-md-8">
+        <div class="form-group col-md-6" id="voter-form" style="display:block">
+            <h2 class="center-title" id="voter_title" style="font-weight:bold">Votador</h2><br/>
+            <h3>Porcentagem estimada de música:</h3><br />
+            <h3 id="knn">KNN: </h3><br/>
+            <h3 id="mlp">MLP: </h3><br/>
+            <h3 id="svm">SVM: </h3><br/>
+            <h3 id="voter">Votador: </h3>
+        </div>
+        <div class="form-group col-md-6">
+            <div class="row-md-8" style="margin-left: 1%; margin-top: 7%; block; width: 430px; height: 350px;">
+                <canvas id="voterChart" width="405" height="350"></canvas>
+            </div>
+            <div class="row-md-4">
+                <audio id="audio-player" src="~/ffmpeg/output/audio.wav" preload="auto"/>
+            </div>
+        </div>
+    </div>
+    <div class="row-md-4" id="algos" style="margin-top: 50%; display:block;">
+        <div class="col-md-4">
+            <canvas id="knnChart" width="405" height="350" style="margin-left: 5%; display: block; width: 405px; height: 350px;"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="mlpChart" width="405" height="350" style="margin-left: 5%; display: block; width: 405px; height: 350px;"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="svmChart" width="405" height="350" style="margin-left: 5%; display: block; width: 405px; height: 350px;"></canvas>
+        </div>
+    </div>
+</div>
